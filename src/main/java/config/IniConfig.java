@@ -17,6 +17,7 @@ public class IniConfig {
     private final String CONFIG_FILE = "systemConfig.ini";
 
     public String stopWords;
+    public String wordNet;
 
     public String word2vec;
     public String glove;
@@ -34,6 +35,7 @@ public class IniConfig {
         Ini configIni = new Ini(IniConfig.class.getClassLoader().getResource(CONFIG_FILE));
 
         stopWords = configIni.get("data", "stopWords");
+        wordNet = configIni.get("data", "wordNet");
 
         word2vec = configIni.get("sourceModel", "word2vec");
         glove = configIni.get("sourceModel", "glove");
