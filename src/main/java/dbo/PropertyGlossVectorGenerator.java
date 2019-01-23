@@ -4,8 +4,12 @@ import config.Database;
 import org.deeplearning4j.models.word2vec.Word2Vec;
 import utils.GenerateModel;
 import utils.Utils;
+import vector.fastText.FastTextModel;
+import vector.glove.GloveModel;
+import vector.word2vec.Word2VecModel;
 import wordnet.WordNet;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -16,8 +20,12 @@ import java.util.*;
  */
 public class PropertyGlossVectorGenerator {
     private HashMap<String, List<String>> propertyWordsForMeanMap = new LinkedHashMap<>();
-    public PropertyGlossVectorGenerator() {
+    /*public PropertyGlossVectorGenerator() {
         getWordsForProperty();
+    }*/
+
+    public void setPropertyWordsForMeanMap(HashMap<String, List<String>> propertyWordsForMeanMap) {
+        this.propertyWordsForMeanMap = propertyWordsForMeanMap;
     }
 
     public void generateVectorModel(String outputModelFile, Word2Vec sourceWordEmbeddingModel) {
@@ -69,6 +77,35 @@ public class PropertyGlossVectorGenerator {
         return wordsForMean;
     }
 
+    public HashMap<String, List<String>> getPropertyGlossMapFromDB() {
+        String query = "SELECT DISTINCT `prop_uri`, `wordnet_gloss` FROM property ORDER BY `prop_uri` ASC";
+        HashMap<String, List<String>> propGlossMap = new LinkedHashMap<>();
+        Statement statement = null;
+        try {
+            statement = Database.databaseInstance.conn.createStatement();
+            java.sql.ResultSet rs = statement.executeQuery(query);
+
+            while (rs.next()) {
+                String gloss = rs.getString("wordnet_gloss");
+                String property = rs.getString("prop_uri");
+
+                String[] glossSplit = gloss.split(", ");
+                List<String> glossWords = new ArrayList<>();
+
+                if (glossSplit.length == 0) {
+                    glossWords.add(gloss);
+                } else {
+                    glossWords.addAll(Arrays.asList(glossSplit));
+                }
+                propGlossMap.put(property, glossWords);
+            }
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return propGlossMap;
+    }
+
     public void getWordsForProperty() {
         try {
             HashMap<String, HashMap<String, String>> propLabelCommentMap = getPropLabelCommentMapDB();
@@ -97,5 +134,20 @@ public class PropertyGlossVectorGenerator {
 
     public static void main(String[] args) {
         PropertyGlossVectorGenerator pgvg = new PropertyGlossVectorGenerator();
+        HashMap<String, List<String>> propGlossMap = pgvg.getPropertyGlossMapFromDB();
+        pgvg.setPropertyWordsForMeanMap(propGlossMap);
+
+        try {
+            Word2Vec embeddingModel = new Word2VecModel().word2Vec;
+            pgvg.generateVectorModel("propGlossEmbedding_w2v.vec", embeddingModel);
+
+            /*Word2Vec embeddingModel = new GloveModel().glove;
+            pgvg.generateVectorModel("propGlossEmbedding_glove.vec", embeddingModel);*/
+
+            /*Word2Vec embeddingModel = new FastTextModel().fastText;
+            pgvg.generateVectorModel("propGlossEmbedding_ft.vec", embeddingModel);*/
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 }
