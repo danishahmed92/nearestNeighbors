@@ -14,8 +14,6 @@ public class IniConfig {
         }
     }
 
-    private final String CONFIG_FILE = "systemConfig.ini";
-
     public String stopWords;
     public String wordNet;
 
@@ -32,6 +30,7 @@ public class IniConfig {
      * @throws IOException
      */
     private IniConfig() throws IOException {
+        String CONFIG_FILE = "systemConfig.ini";
         Ini configIni = new Ini(IniConfig.class.getClassLoader().getResource(CONFIG_FILE));
 
         stopWords = configIni.get("data", "stopWords");

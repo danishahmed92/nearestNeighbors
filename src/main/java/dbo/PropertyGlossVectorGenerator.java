@@ -52,22 +52,20 @@ public class PropertyGlossVectorGenerator {
         String[] wordSplit = labelCommentNoStopWords.split(" ");
         wordsForMean.addAll(Arrays.asList(wordSplit));
 
-        try {
-            WordNet wordNet = new WordNet();
-            HashMap<String, String> wordGlossMap = wordNet.getGlossFromString(labelCommentNoStopWords,
-                    true,
-                    false);
+
+        WordNet wordNet = WordNet.wordNet;
+        HashMap<String, String> wordGlossMap = wordNet.getGlossFromString(labelCommentNoStopWords,
+                true,
+                false);
 
 //            this map will only have repeated words in gloss but not in keys
-            for (String word : wordGlossMap.keySet()) {
-                String glossFiltered = wordGlossMap.get(word);
-                String[] glossSplit = glossFiltered.split(" ");
+        for (String word : wordGlossMap.keySet()) {
+            String glossFiltered = wordGlossMap.get(word);
+            String[] glossSplit = glossFiltered.split(" ");
 
-                wordsForMean.addAll(Arrays.asList(glossSplit));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+            wordsForMean.addAll(Arrays.asList(glossSplit));
         }
+
         return wordsForMean;
     }
 
