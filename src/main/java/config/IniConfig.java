@@ -22,7 +22,9 @@ public class IniConfig {
     public String fastText;
     public String numberBatch;
 
-
+    public String propertyGlossW2V;
+    public String propertyGlossGlove;
+    public String propertyGlossFT;
 
     /**
      * reading configuration from sameAs.ini
@@ -40,5 +42,9 @@ public class IniConfig {
         glove = configIni.get("sourceModel", "glove");
         fastText = configIni.get("sourceModel", "fastText");
         numberBatch = configIni.get("sourceModel", "numberBatch");
+
+        propertyGlossW2V = configIni.get("generatedModel", "propertyGlossW2V");
+        propertyGlossGlove = configIni.get("generatedModel", "propertyGlossGlove");
+        propertyGlossFT = configIni.get("generatedModel", "propertyGlossFT");
     }
 }
