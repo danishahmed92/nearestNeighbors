@@ -94,7 +94,7 @@ public class VectorModelUtils extends BasicModelUtils {
     }
 
     protected HashMap<String, Double> getNSimilarity(List<BasicModelUtils.WordSimilarity> results, int limit) {
-        HashMap<String, Double> wordSimilarityMap = new HashMap<>();
+        HashMap<String, Double> wordSimilarityMap = new LinkedHashMap<>();
         for (int i = 0; i < results.size(); i++) {
             wordSimilarityMap.put(((BasicModelUtils.WordSimilarity)results.get(i)).getWord(),
                     ((BasicModelUtils.WordSimilarity)results.get(i)).getSimilarity());

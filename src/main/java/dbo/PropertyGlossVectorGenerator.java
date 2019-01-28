@@ -138,14 +138,14 @@ public class PropertyGlossVectorGenerator {
         pgvg.setPropertyWordsForMeanMap(propGlossMap);
 
         try {
-            Word2Vec embeddingModel = new Word2VecModel().word2Vec;
-            pgvg.generateVectorModel("propGlossEmbedding_w2v.vec", embeddingModel);
+            /*Word2Vec embeddingModel = new Word2VecModel().word2Vec;
+            pgvg.generateVectorModel("propGlossEmbedding_w2v.vec", embeddingModel);*/
 
             /*Word2Vec embeddingModel = new GloveModel().glove;
             pgvg.generateVectorModel("propGlossEmbedding_glove.vec", embeddingModel);*/
 
-            /*Word2Vec embeddingModel = new FastTextModel().fastText;
-            pgvg.generateVectorModel("propGlossEmbedding_ft.vec", embeddingModel);*/
+            Word2Vec embeddingModel = new FastTextModel().fastText;
+            pgvg.generateVectorModel("propGlossEmbedding_ft.vec", embeddingModel);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }

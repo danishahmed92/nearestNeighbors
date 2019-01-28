@@ -7,13 +7,11 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import vector.VectorModel;
 import vector.VectorModelUtils;
 
+import javax.validation.constraints.Null;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author DANISH AHMED on 1/27/2019
@@ -33,16 +31,21 @@ public class PropertyClassification {
         VectorModel vectorModelGenerated = new VectorModel();
 
         IniConfig config = IniConfig.configInstance;
-        sourceModel = vectorModelSource.setVectorModel(config.word2vec);
-        generatedModel = vectorModelGenerated.setVectorModel(config.propertyGlossW2V);
+        sourceModel = vectorModelSource.setVectorModel(config.glove);
+        generatedModel = vectorModelGenerated.setVectorModel(config.propertyGlossGlove);
     }
 
     public HashMap<String, Double> getNearestProperties(List<String> wordList, int limit) {
-        INDArray wordListVecMean = VectorModelUtils.getMeanVecFromWordList(sourceModel, wordList);
+        try {
+            INDArray wordListVecMean = VectorModelUtils.getMeanVecFromWordList(sourceModel, wordList);
 
-//        the above calculated mean vector will be compared again generated model to get nearest property
-        VectorModelUtils modelUtils = new VectorModelUtils();
-        return modelUtils.vectorNearest(generatedModel, wordListVecMean, limit);
+            //        the above calculated mean vector will be compared again generated model to get nearest property
+            VectorModelUtils modelUtils = new VectorModelUtils();
+            return modelUtils.vectorNearest(generatedModel, wordListVecMean, limit);
+        } catch (NullPointerException | IllegalStateException e) {
+            e.printStackTrace();
+            return new HashMap<>();
+        }
     }
 
     public HashMap<String, Double> getNearestPropertiesFromWord(String word, int limit) {
@@ -87,20 +90,33 @@ public class PropertyClassification {
             HashMap<String, String> detailMap = okePatternMap.get(patternId);
             String nouns = detailMap.get("nouns");
             nouns = nouns.substring(1, nouns.length()-1);
+            nouns = nouns.replaceAll("-", ", ");
+            nouns = nouns.replaceAll("_", ", ");
+
+            List<String> roots = new ArrayList<>();
+            roots.add(detailMap.get("origRoot"));
+            roots.add(detailMap.get("rootLemma"));
+
+            HashMap<String, Double> rootPropertyScore = pc.getNearestProperties(roots, 3);
+            HashMap<String, Double> nounPropertyScore = new LinkedHashMap<>();
+
+            System.out.println(patternId);
+            System.out.println(rootPropertyScore);
 
             if (nouns.length() > 0) {
                 String[] nounsSplit = nouns.split(", ");
                 List<String> nounsList = Arrays.asList(nounsSplit);
 
-                List<String> roots = new ArrayList<>();
-                roots.add(detailMap.get("origRoot"));
-                roots.add(detailMap.get("rootLemma"));
+                nounPropertyScore = pc.getNearestProperties(nounsList, 3);
 
-                System.out.println(patternId);
-                System.out.println(pc.getNearestProperties(roots, 3));
-                System.out.println(pc.getNearestProperties(nounsList, 3));
-                System.out.println();
+                roots.addAll(nounsList);
+                HashMap<String, Double> mergeRootNounScore = pc.getNearestProperties(roots, 3);
+
+                System.out.println(nounPropertyScore);
+                System.out.println("Merged:\t" + mergeRootNounScore);
             }
+            StoreEmbeddingOKE.storeScore("oke_score_glove", patternId, rootPropertyScore, nounPropertyScore);
+            System.out.println();
         }
     }
 }
