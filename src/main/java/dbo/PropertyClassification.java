@@ -31,20 +31,30 @@ public class PropertyClassification {
         VectorModel vectorModelGenerated = new VectorModel();
 
         IniConfig config = IniConfig.configInstance;
-        sourceModel = vectorModelSource.setVectorModel(config.glove);
-        generatedModel = vectorModelGenerated.setVectorModel(config.propertyGlossGlove);
+        sourceModel = vectorModelSource.setVectorModel(config.fastText);
+        generatedModel = vectorModelGenerated.setVectorModel(config.propertyGlossFT);
     }
 
     public HashMap<String, Double> getNearestProperties(List<String> wordList, int limit) {
         try {
             INDArray wordListVecMean = VectorModelUtils.getMeanVecFromWordList(sourceModel, wordList);
 
-            //        the above calculated mean vector will be compared again generated model to get nearest property
+            //        the above calculated mean vector will be compared against generated model to get nearest property
             VectorModelUtils modelUtils = new VectorModelUtils();
             return modelUtils.vectorNearest(generatedModel, wordListVecMean, limit);
         } catch (NullPointerException | IllegalStateException e) {
             e.printStackTrace();
             return new HashMap<>();
+        }
+    }
+
+    public double getSimilarityOfWordsWithProperty(List<String> wordList, String property) {
+        try {
+            INDArray wordListVecMean = VectorModelUtils.getMeanVecFromWordList(sourceModel, wordList);
+            return VectorModelUtils.getSimilarity(generatedModel, property, wordListVecMean);
+        } catch (NullPointerException | IllegalStateException e) {
+            e.printStackTrace();
+            return 0.0;
         }
     }
 

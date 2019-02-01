@@ -16,6 +16,7 @@ public class IniConfig {
 
     public String stopWords;
     public String wordNet;
+    public String resultPath;
 
     public String word2vec;
     public String glove;
@@ -37,6 +38,7 @@ public class IniConfig {
 
         stopWords = configIni.get("data", "stopWords");
         wordNet = configIni.get("data", "wordNet");
+        resultPath = configIni.get("data", "resultPath");
 
         word2vec = configIni.get("sourceModel", "word2vec");
         glove = configIni.get("sourceModel", "glove");
