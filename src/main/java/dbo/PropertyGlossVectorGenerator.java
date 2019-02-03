@@ -106,6 +106,35 @@ public class PropertyGlossVectorGenerator {
         return propGlossMap;
     }
 
+    public HashMap<String, List<String>> getPropertySynsetMapFromDB() {
+        String query = "SELECT DISTINCT `prop_uri`, `wordnet_synset` FROM property ORDER BY `prop_uri` ASC";
+        HashMap<String, List<String>> propGlossMap = new LinkedHashMap<>();
+        Statement statement = null;
+        try {
+            statement = Database.databaseInstance.conn.createStatement();
+            java.sql.ResultSet rs = statement.executeQuery(query);
+
+            while (rs.next()) {
+                String synset = rs.getString("wordnet_synset").toLowerCase();
+                String property = rs.getString("prop_uri");
+
+                String[] glossSplit = synset.split(", ");
+                List<String> glossWords = new ArrayList<>();
+
+                if (glossSplit.length == 0) {
+                    glossWords.add(synset);
+                } else {
+                    glossWords.addAll(Arrays.asList(glossSplit));
+                }
+                propGlossMap.put(property, glossWords);
+            }
+            statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return propGlossMap;
+    }
+
     public void getWordsForProperty() {
         try {
             HashMap<String, HashMap<String, String>> propLabelCommentMap = getPropLabelCommentMapDB();
@@ -135,17 +164,18 @@ public class PropertyGlossVectorGenerator {
     public static void main(String[] args) {
         PropertyGlossVectorGenerator pgvg = new PropertyGlossVectorGenerator();
         HashMap<String, List<String>> propGlossMap = pgvg.getPropertyGlossMapFromDB();
-        pgvg.setPropertyWordsForMeanMap(propGlossMap);
+        HashMap<String, List<String>> propSynsetMap = pgvg.getPropertySynsetMapFromDB();
+        pgvg.setPropertyWordsForMeanMap(propSynsetMap);
 
         try {
             /*Word2Vec embeddingModel = new Word2VecModel().word2Vec;
-            pgvg.generateVectorModel("propGlossEmbedding_w2v.vec", embeddingModel);*/
+            pgvg.generateVectorModel("propSynsetEmbedding_w2v.vec", embeddingModel);*/
 
             /*Word2Vec embeddingModel = new GloveModel().glove;
-            pgvg.generateVectorModel("propGlossEmbedding_glove.vec", embeddingModel);*/
+            pgvg.generateVectorModel("propSynsetEmbedding_glove.vec", embeddingModel);*/
 
             Word2Vec embeddingModel = new FastTextModel().fastText;
-            pgvg.generateVectorModel("propGlossEmbedding_ft.vec", embeddingModel);
+            pgvg.generateVectorModel("propSynsetEmbedding_ft.vec", embeddingModel);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }

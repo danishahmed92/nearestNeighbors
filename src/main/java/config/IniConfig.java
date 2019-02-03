@@ -27,6 +27,10 @@ public class IniConfig {
     public String propertyGlossGlove;
     public String propertyGlossFT;
 
+    public String propertySynsetW2V;
+    public String propertySynsetGlove;
+    public String propertySynsetFT;
+
     /**
      * reading configuration from sameAs.ini
      * and set variables that are globally required
@@ -48,5 +52,9 @@ public class IniConfig {
         propertyGlossW2V = configIni.get("generatedModel", "propertyGlossW2V");
         propertyGlossGlove = configIni.get("generatedModel", "propertyGlossGlove");
         propertyGlossFT = configIni.get("generatedModel", "propertyGlossFT");
+
+        propertySynsetW2V = configIni.get("generatedModel", "propertySynsetW2V");
+        propertySynsetGlove = configIni.get("generatedModel", "propertySynsetGlove");
+        propertySynsetFT = configIni.get("generatedModel", "propertySynsetFT");
     }
 }

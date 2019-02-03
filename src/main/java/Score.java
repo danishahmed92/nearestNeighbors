@@ -14,8 +14,8 @@ public class Score {
     Score() {
         setPropertyPatternCountMap();
     }
-    private PropertyClassification pc = PropertyClassification.propertyClassificationInstance;
-//    private PropertyClassification pc = null;
+//    private PropertyClassification pc = PropertyClassification.propertyClassificationInstance;
+    private PropertyClassification pc = null;
     private HashMap<String, Integer> propertyPatternCountMap = new LinkedHashMap<>();
     private HashMap<String, HashMap<String, HashMap<String, String>>> propertyPatternFreqSGMap = new HashMap<>();
 
@@ -196,7 +196,7 @@ public class Score {
 
     public double getConfidence(double alpha, double beta, String property, String compareWithPattern, HashMap<String, String> comparisonPatternMap,
                                 String sentenceGeneratedPattern, HashMap<String, String> patternDetailMap) {
-        double support = Double.parseDouble(comparisonPatternMap.get("support"));
+        double support = Double.parseDouble(comparisonPatternMap.get("support")) + 1;
         try {
             support = support / propertyPatternCountMap.get(property);
             if (Double.isNaN(support))
@@ -260,7 +260,8 @@ public class Score {
         if (propertyPatternFreqSGMap.containsKey(property))
             return propertyPatternFreqSGMap.get(property);
 
-        String query = String.format("select pp.pattern, " +
+        String query = String.format("select pattern, sg_pretty, support, specificity, occur_prop, occur_pattern_freq from pattern_stats where prop_uri = \"%s\";", property);
+        /*String query = String.format("select pp.pattern, " +
                 "(select pa.sg_pretty from property_pattern pa where pa.prop_uri = \"%s\" and pa.pattern = pp.pattern limit 1) as sg_pretty, " +
                 "count(pp.pattern) as support, " +
                 "(select count(ps.pattern) from property_pattern  ps where ps.prop_uri != \"%s\" and ps.pattern = pp.pattern) as specificity, " +
@@ -269,7 +270,7 @@ public class Score {
                 "from property_pattern pp " +
                 "where prop_uri = \"%s\" " +
                 "group by pattern " +
-                "order by support desc; ", property, property, property, property, property);
+                "order by support desc; ", property, property, property, property, property);*/
         HashMap<String, HashMap<String, String>> patternFreqSGMap = new LinkedHashMap<>();
         Statement statement = null;
         try {
@@ -340,7 +341,7 @@ public class Score {
 
                 String outputFile = String.format("%s%salpha%1fbeta%1f",
                         IniConfig.configInstance.resultPath,
-                        "ft/",
+                        "ft/gloss/",
                         alpha,
                         beta);
                 try {
