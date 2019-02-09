@@ -2,10 +2,7 @@ import config.IniConfig;
 import utils.Utils;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 public class Evaluation {
     private HashMap<String, HashMap<String, Integer>> propertyResultsMap = new HashMap<>();
@@ -18,10 +15,10 @@ public class Evaluation {
         if (resultSplit.length < 4)
             return;
 
-        String actualProperty = resultSplit[1];
-        String predictedProperty = resultSplit[2];
+        String actualProperty = resultSplit[1].toLowerCase().trim();
+        String predictedProperty = resultSplit[2].toLowerCase().trim();
 
-        if (resultSplit[3].equals("1")) {
+        if (actualProperty.equals(predictedProperty)) {
             if (!propertyResultsMap.containsKey(actualProperty)) {
                 HashMap<String, Integer> resultStatMap = new HashMap<>();
                 resultStatMap.put("TP", 1);
@@ -103,8 +100,10 @@ public class Evaluation {
     }
 
     public static void main(String[] args) {
-        String resultDirectory = IniConfig.configInstance.resultPath + "glove/";
+        String resultDirectory = IniConfig.configInstance.resultPath + "w2v/synset/";
         List<String> filesInDirectory = Utils.getFilesInDirectory(resultDirectory);
+
+        HashMap<String, Double> fileFMeasure = new HashMap<>();
         double maxFmeasure = -1;
         String maxFile = "";
 
@@ -170,7 +169,7 @@ public class Evaluation {
                 maxFile = "PF" + file;
             }
 
-            String outputFile = resultDirectory + "PF" + file;
+            /*String outputFile = resultDirectory + "PF" + file;
             try {
                 PrintWriter writer = new PrintWriter(outputFile, "UTF-8");
                 for (String property : sortedPropEvalMap.keySet()) {
@@ -191,9 +190,32 @@ public class Evaluation {
                 writer.close();
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
                 e.printStackTrace();
-            }
+            }*/
+            fileFMeasure.put(file, avgFMeasure);
         }
+
         System.out.println(maxFile + ":\t" + maxFmeasure);
+        System.out.println();
+        System.out.println(entriesSortedByValues(fileFMeasure));
+
+
+    }
+
+    static <K,V extends Comparable<? super V>>
+    List<Map.Entry<K, V>> entriesSortedByValues(Map<K,V> map) {
+
+        List<Map.Entry<K,V>> sortedEntries = new ArrayList<Map.Entry<K,V>>(map.entrySet());
+
+        Collections.sort(sortedEntries,
+                new Comparator<Map.Entry<K,V>>() {
+                    @Override
+                    public int compare(Map.Entry<K,V> e1, Map.Entry<K,V> e2) {
+                        return e2.getValue().compareTo(e1.getValue());
+                    }
+                }
+        );
+
+        return sortedEntries;
     }
 
 }

@@ -32,7 +32,8 @@ public class PropertyClassification {
 
         IniConfig config = IniConfig.configInstance;
         sourceModel = vectorModelSource.setVectorModel(config.fastText);
-        generatedModel = vectorModelGenerated.setVectorModel(config.propertyGlossFT);
+        generatedModel = vectorModelGenerated.setVectorModel(config.propertySynsetFT);
+//        generatedModel = vectorModelGenerated.setVectorModel(config.propertyGlossFT);
     }
 
     public HashMap<String, Double> getNearestProperties(List<String> wordList, int limit) {

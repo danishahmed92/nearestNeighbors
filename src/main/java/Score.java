@@ -14,52 +14,10 @@ public class Score {
     Score() {
         setPropertyPatternCountMap();
     }
-//    private PropertyClassification pc = PropertyClassification.propertyClassificationInstance;
-    private PropertyClassification pc = null;
+    private PropertyClassification pc = PropertyClassification.propertyClassificationInstance;
+//    private PropertyClassification pc = null;
     private HashMap<String, Integer> propertyPatternCountMap = new LinkedHashMap<>();
     private HashMap<String, HashMap<String, HashMap<String, String>>> propertyPatternFreqSGMap = new HashMap<>();
-
-    public static int getSupport(String property, String pattern) {
-        String supportQuery = String.format("SELECT count(id_prop_pattern) as pcount from property_pattern where prop_uri = \"%s\" and pattern = \"%s\";",
-                property, pattern);
-
-        Statement statement = null;
-        int support = 0;
-//        int support = 1;
-
-        try {
-            statement = Database.databaseInstance.conn.createStatement();
-            java.sql.ResultSet rs = statement.executeQuery(supportQuery);
-
-            while (rs.next()) {
-                support = support + rs.getInt("pcount");
-            }
-            statement.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return support;
-    }
-
-    public static int getSpecificity(String property, String pattern) {
-        String specificityQuery = String.format("SELECT count(id_prop_pattern) as pcount from property_pattern where prop_uri NOT IN (\"%s\") and pattern = \"%s\";",
-                property, pattern);
-        Statement statement = null;
-        int specificity = 0;
-
-        try {
-            statement = Database.databaseInstance.conn.createStatement();
-            java.sql.ResultSet rs = statement.executeQuery(specificityQuery);
-
-            while (rs.next()) {
-                specificity = rs.getInt("pcount");
-            }
-            statement.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return specificity;
-    }
 
     private void setPropertyPatternCountMap() {
         String supportQuery = "SELECT prop_uri, count(id_prop_pattern) as pcount from property_pattern group by prop_uri;";
@@ -161,42 +119,9 @@ public class Score {
         return removedSG.toString();
     }
 
-    /*public double getConfidence(double alpha, double beta, String property, String compareWithPattern,
-                                String sentenceGeneratedPattern, HashMap<String, String> patternDetailMap) {
-        double support = getSupport(property, compareWithPattern);
-        double specificity = getSpecificity(property, compareWithPattern);
-
-        double alphaCalculation = ((alpha * support) + (1 - alpha) * specificity);
-
-        List<String> roots = new ArrayList<>();
-        roots.add(patternDetailMap.get("root"));
-        roots.add(patternDetailMap.get("rootLemma"));
-
-        String nouns = patternDetailMap.get("nouns");
-        String verbs = patternDetailMap.get("verbs");
-        List<String> nounsVerbList = new ArrayList<>();
-
-        if (nouns != null && nouns.length() > 0) {
-            String[] nounsSplit = nouns.split(", ");
-            nounsVerbList.addAll(Arrays.asList(nounsSplit));
-        }
-        if (verbs != null && verbs.length() > 0) {
-            String[] verbsSplit = verbs.split(", ");
-            nounsVerbList.addAll(Arrays.asList(verbsSplit));
-        }
-
-        double rootCosine = pc.getSimilarityOfWordsWithProperty(roots, property);
-        double nounsVerbCosine = pc.getSimilarityOfWordsWithProperty(nounsVerbList, property);
-
-        JaroWinklerDistance similarityMetric = new JaroWinklerDistance();
-        double patternSimilarity = similarityMetric.apply(sentenceGeneratedPattern, compareWithPattern);
-
-        return 0.0;
-    }*/
-
     public double getConfidence(double alpha, double beta, String property, String compareWithPattern, HashMap<String, String> comparisonPatternMap,
                                 String sentenceGeneratedPattern, HashMap<String, String> patternDetailMap) {
-        double support = Double.parseDouble(comparisonPatternMap.get("support")) + 1;
+        double support = Double.parseDouble(comparisonPatternMap.get("support"));
         try {
             support = support / propertyPatternCountMap.get(property);
             if (Double.isNaN(support))
@@ -341,7 +266,7 @@ public class Score {
 
                 String outputFile = String.format("%s%salpha%1fbeta%1f",
                         IniConfig.configInstance.resultPath,
-                        "ft/gloss/",
+                        "ft/synset/",
                         alpha,
                         beta);
                 try {
