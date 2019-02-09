@@ -31,8 +31,8 @@ public class PropertyClassification {
         VectorModel vectorModelGenerated = new VectorModel();
 
         IniConfig config = IniConfig.configInstance;
-        sourceModel = vectorModelSource.setVectorModel(config.fastText);
-        generatedModel = vectorModelGenerated.setVectorModel(config.propertySynsetFT);
+        sourceModel = vectorModelSource.setVectorModel(config.word2vec);
+        generatedModel = vectorModelGenerated.setVectorModel(config.propertySynsetW2V);
 //        generatedModel = vectorModelGenerated.setVectorModel(config.propertyGlossFT);
     }
 

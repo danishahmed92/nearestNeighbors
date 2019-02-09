@@ -119,27 +119,7 @@ public class Score {
         return removedSG.toString();
     }
 
-    public double getConfidence(double alpha, double beta, String property, String compareWithPattern, HashMap<String, String> comparisonPatternMap,
-                                String sentenceGeneratedPattern, HashMap<String, String> patternDetailMap) {
-        double support = Double.parseDouble(comparisonPatternMap.get("support"));
-        try {
-            support = support / propertyPatternCountMap.get(property);
-            if (Double.isNaN(support))
-                support = 0;
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-            System.out.println("no patterns for property: " + property);
-        }
-
-        double specificity = Double.parseDouble(comparisonPatternMap.get("specificity"));
-        double occurProp = Double.parseDouble(comparisonPatternMap.get("occurProp"));
-        double occurPatternFreq = Double.parseDouble(comparisonPatternMap.get("occurPatternFreq"));
-        specificity = (specificity * occurProp) / occurPatternFreq;
-        if (Double.isNaN(specificity))
-            specificity = 0;
-
-        double alphaCalculation = ((alpha * support) + (1 - alpha) * specificity);
-
+    public double preCosineOfInputForProperty(String property, HashMap<String, String> patternDetailMap) {
         List<String> roots = new ArrayList<>();
         roots.add(patternDetailMap.get("root").toLowerCase());
         if (patternDetailMap.get("rootLemma") != null)
@@ -165,11 +145,60 @@ public class Score {
         double rootCosine = pc.getSimilarityOfWordsWithProperty(roots, property);
         double nounsVerbCosine = pc.getSimilarityOfWordsWithProperty(nounsVerbList, property);
 
-        double cosineSimilarity = rootCosine + nounsVerbCosine;
+        return rootCosine + nounsVerbCosine;
+    }
+
+    public double getConfidence(double alpha, double beta, String property, String compareWithPattern, HashMap<String, String> comparisonPatternMap,
+                                String sentenceGeneratedPattern, String sentenceSGPretty, double cosineSimilarity) {
+        double support = Double.parseDouble(comparisonPatternMap.get("support"));
+        try {
+            support = support / propertyPatternCountMap.get(property);
+            if (Double.isNaN(support))
+                support = 0;
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            System.out.println("no patterns for property: " + property);
+        }
+
+        double specificity = Double.parseDouble(comparisonPatternMap.get("specificity"));
+        double occurProp = Double.parseDouble(comparisonPatternMap.get("occurProp"));
+        double occurPatternFreq = Double.parseDouble(comparisonPatternMap.get("occurPatternFreq"));
+        specificity = (specificity * occurProp) / occurPatternFreq;
+        if (Double.isNaN(specificity))
+            specificity = 0;
+
+        double alphaCalculation = ((alpha * support) + (1 - alpha) * specificity);
+
+        /*List<String> roots = new ArrayList<>();
+        roots.add(patternDetailMap.get("root").toLowerCase());
+        if (patternDetailMap.get("rootLemma") != null)
+            roots.add(patternDetailMap.get("rootLemma").toLowerCase());
+
+        String nouns = patternDetailMap.get("nouns");
+        String verbs = patternDetailMap.get("verbs");
+
+        nouns = nouns.toLowerCase();
+        verbs = verbs.toLowerCase();
+
+        List<String> nounsVerbList = new ArrayList<>();
+
+        if (nouns != null && nouns.length() > 0) {
+            String[] nounsSplit = nouns.split(", ");
+            nounsVerbList.addAll(Arrays.asList(nounsSplit));
+        }
+        if (verbs != null && verbs.length() > 0) {
+            String[] verbsSplit = verbs.split(", ");
+            nounsVerbList.addAll(Arrays.asList(verbsSplit));
+        }
+
+        double rootCosine = pc.getSimilarityOfWordsWithProperty(roots, property);
+        double nounsVerbCosine = pc.getSimilarityOfWordsWithProperty(nounsVerbList, property);
+
+        double cosineSimilarity = rootCosine + nounsVerbCosine;*/
 
         JaroWinklerDistance similarityMetric = new JaroWinklerDistance();
         double patternSimilarity = similarityMetric.apply(sentenceGeneratedPattern, compareWithPattern);
-        double sgSimilarity = similarityMetric.apply(patternDetailMap.get("sgPretty"), comparisonPatternMap.get("sgPretty"));
+        double sgSimilarity = similarityMetric.apply(sentenceSGPretty, comparisonPatternMap.get("sgPretty"));
 
         double betaCalculation = beta * patternSimilarity * sgSimilarity;
 
@@ -266,11 +295,12 @@ public class Score {
 
                 String outputFile = String.format("%s%salpha%1fbeta%1f",
                         IniConfig.configInstance.resultPath,
-                        "ft/synset/",
+                        "w2v/synset/",
                         alpha,
                         beta);
                 try {
-                    PrintWriter writer = new PrintWriter(outputFile, "UTF-8");
+//                    PrintWriter writer = new PrintWriter(outputFile, "UTF-8");
+                    PrintWriter writer;
 
                     for (int tripleId : okeTripleIdDetailMap.keySet()) {
                         double confidence = -1;
@@ -285,11 +315,13 @@ public class Score {
                             for (String sentPattern : patternDetailMap.keySet()) {
                                 HashMap<String, String> sentPatternDetail = patternDetailMap.get(sentPattern);
                                 for (String property : properties) {
+                                    double cosine = score.preCosineOfInputForProperty(property, sentPatternDetail);
                                     HashMap<String, HashMap<String, String>> patternFreqSGMap = score.getPatternsFreqAndSGPrettyForProperty(property);
+
                                     for (String pattern : patternFreqSGMap.keySet()) {
                                         double patternScore = score.getConfidence(alpha, beta,
                                                 property, pattern, patternFreqSGMap.get(pattern),
-                                                sentPattern, sentPatternDetail);
+                                                sentPattern, sentPatternDetail.get("sgPretty"), cosine);
 
                                         if (patternScore > confidence) {
                                             confidence = patternScore;
@@ -309,25 +341,25 @@ public class Score {
                             isCorrect = 1;
                         }
 
-                        writer.println(String.format("%d\t%s\t%s\t%d",
-                                tripleId,
-                                tripleDetailMap.get("property"),
-                                maxProperty,
-                                isCorrect));
+//                        writer.println(String.format("%d\t%s\t%s\t%d",
+//                                tripleId,
+//                                tripleDetailMap.get("property"),
+//                                maxProperty,
+//                                isCorrect));
 
                         tripleIdentifiedPropertyMap.put(tripleId, maxProperty);
                     }
 
-                    writer.println();
-                    writer.println(triplesEvaluated + "\t" + correctlyIdentified);
-                    writer.close();
+//                    writer.println();
+//                    writer.println(triplesEvaluated + "\t" + correctlyIdentified);
+//                    writer.close();
 
                     if (correctlyIdentified > maxCorrect) {
                         maxCorrect = correctlyIdentified;
                         bestAlpha = alpha;
                         bestBeta = beta;
                     }
-                } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                } catch (NullPointerException /*FileNotFoundException | UnsupportedEncodingException*/ e) {
                     e.printStackTrace();
                 }
                 beta = beta + 0.1;
