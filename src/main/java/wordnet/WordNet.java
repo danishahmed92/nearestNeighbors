@@ -3,17 +3,14 @@ package wordnet;
 import config.IniConfig;
 import edu.mit.jwi.Dictionary;
 import edu.mit.jwi.IDictionary;
-import edu.mit.jwi.item.IIndexWord;
-import edu.mit.jwi.item.IWord;
-import edu.mit.jwi.item.IWordID;
-import edu.mit.jwi.item.POS;
+import edu.mit.jwi.item.*;
 import utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
+import java.util.*;
 
 /**
  * @author DANISH AHMED on 12/17/2018
@@ -67,6 +64,30 @@ public class WordNet {
         } catch (NullPointerException ne) {
             return noun;
         }
+    }
+
+    public Set<String> getNTopSynonyms(String word, int n) {
+        Set<String> synonyms = new HashSet<>();
+        POS pos = getBestPOS(word);
+        if (pos == null)
+            return synonyms;
+
+        IIndexWord indexWord = dict.getIndexWord(word, pos);
+        if (indexWord != null) {
+            List<IWordID> wordIDs = indexWord.getWordIDs();
+            for (IWordID wordID : wordIDs) {
+                IWord iWord = dict.getWord(wordID);
+                ISynset iSynset = iWord.getSynset();
+
+                for (IWord synsetWord : iSynset.getWords()) {
+                    if (synonyms.size() < n) {
+                        synonyms.add(synsetWord.getLemma());
+                        n++;
+                    }
+                }
+            }
+        }
+        return synonyms;
     }
 
     public POS getBestPOS(String word) {
@@ -190,12 +211,13 @@ public class WordNet {
 
     public static void main(String[] args) {
         WordNet wordNet = WordNet.wordNet;
-        String word = "advisor";
+        String word = "debut";
         POS pos = wordNet.getBestPOS(word);
 
         System.out.println(word.toUpperCase());
         System.out.println("POS:\t" + wordNet.getBestPOS(word));
         System.out.println("Lemma:\t" + wordNet.getLemma(word, pos));
         System.out.println("Gloss:\t" + wordNet.getGloss(word, pos));
+        System.out.println("Synonym:\t" + wordNet.getNTopSynonyms(word, 100));
     }
 }
