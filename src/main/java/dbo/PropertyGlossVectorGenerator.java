@@ -77,6 +77,20 @@ public class PropertyGlossVectorGenerator {
         return wordsForMean;
     }
 
+    private List<String> getSynonymsForMeanVector(String labelCommentNoStopWords) {
+        List<String> wordsForMean = new ArrayList<>();
+
+//        Adding initially because we need repeated words
+        String[] wordSplit = labelCommentNoStopWords.split(" ");
+        wordsForMean.addAll(Arrays.asList(wordSplit));
+
+        WordNet wordNet = WordNet.wordNet;
+        for (String word : wordSplit) {
+            wordsForMean.addAll(wordNet.getNTopSynonyms(word, 1000));
+        }
+        return wordsForMean;
+    }
+
     public HashMap<String, List<String>> getPropertyGlossMapFromDB() {
         String query = "SELECT DISTINCT `prop_uri`, `wordnet_gloss` FROM property ORDER BY `prop_uri` ASC";
         HashMap<String, List<String>> propGlossMap = new LinkedHashMap<>();
@@ -94,35 +108,6 @@ public class PropertyGlossVectorGenerator {
 
                 if (glossSplit.length == 0) {
                     glossWords.add(gloss);
-                } else {
-                    glossWords.addAll(Arrays.asList(glossSplit));
-                }
-                propGlossMap.put(property, glossWords);
-            }
-            statement.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return propGlossMap;
-    }
-
-    public HashMap<String, List<String>> getPropertySynsetMapFromDB() {
-        String query = "SELECT DISTINCT `prop_uri`, `wordnet_synset` FROM property ORDER BY `prop_uri` ASC";
-        HashMap<String, List<String>> propGlossMap = new LinkedHashMap<>();
-        Statement statement = null;
-        try {
-            statement = Database.databaseInstance.conn.createStatement();
-            java.sql.ResultSet rs = statement.executeQuery(query);
-
-            while (rs.next()) {
-                String synset = rs.getString("wordnet_synset").toLowerCase();
-                String property = rs.getString("prop_uri");
-
-                String[] glossSplit = synset.split(", ");
-                List<String> glossWords = new ArrayList<>();
-
-                if (glossSplit.length == 0) {
-                    glossWords.add(synset);
                 } else {
                     glossWords.addAll(Arrays.asList(glossSplit));
                 }
@@ -153,7 +138,8 @@ public class PropertyGlossVectorGenerator {
                 label = utils.removeStopWordsFromString(label);
 
                 //get gloss for each word
-                propertyWordsForMeanMap.put(propUri, getGlossIncludedWordsForMeanVector(label));
+//                propertyWordsForMeanMap.put(propUri, getGlossIncludedWordsForMeanVector(label));
+                propertyWordsForMeanMap.put(propUri, getSynonymsForMeanVector(label));
             }
             System.out.println(propertyWordsForMeanMap);
         } catch (SQLException e) {
@@ -163,21 +149,21 @@ public class PropertyGlossVectorGenerator {
 
     public static void main(String[] args) {
         PropertyGlossVectorGenerator pgvg = new PropertyGlossVectorGenerator();
-        HashMap<String, List<String>> propGlossMap = pgvg.getPropertyGlossMapFromDB();
-        HashMap<String, List<String>> propSynsetMap = pgvg.getPropertySynsetMapFromDB();
-        pgvg.setPropertyWordsForMeanMap(propSynsetMap);
+        /*HashMap<String, List<String>> propGlossMap = pgvg.getPropertyGlossMapFromDB();
+        pgvg.setPropertyWordsForMeanMap(propGlossMap);
 
         try {
-            /*Word2Vec embeddingModel = new Word2VecModel().word2Vec;
-            pgvg.generateVectorModel("propSynsetEmbedding_w2v.vec", embeddingModel);*/
+            *//*Word2Vec embeddingModel = new Word2VecModel().word2Vec;
+            pgvg.generateVectorModel("propGlossEmbedding_w2v.vec", embeddingModel);*//*
 
-            /*Word2Vec embeddingModel = new GloveModel().glove;
-            pgvg.generateVectorModel("propSynsetEmbedding_glove.vec", embeddingModel);*/
+         *//*Word2Vec embeddingModel = new GloveModel().glove;
+            pgvg.generateVectorModel("propGlossEmbedding_glove.vec", embeddingModel);*//*
 
             Word2Vec embeddingModel = new FastTextModel().fastText;
-            pgvg.generateVectorModel("propSynsetEmbedding_ft.vec", embeddingModel);
+            pgvg.generateVectorModel("propGlossEmbedding_ft.vec", embeddingModel);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        }
+        }*/
+        pgvg.getWordsForProperty();
     }
 }
