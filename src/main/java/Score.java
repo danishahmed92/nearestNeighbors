@@ -299,8 +299,8 @@ public class Score {
                         alpha,
                         beta);
                 try {
-//                    PrintWriter writer = new PrintWriter(outputFile, "UTF-8");
-                    PrintWriter writer;
+                    PrintWriter writer = new PrintWriter(outputFile, "UTF-8");
+//                    PrintWriter writer;
 
                     for (int tripleId : okeTripleIdDetailMap.keySet()) {
                         double confidence = -1;
@@ -341,25 +341,26 @@ public class Score {
                             isCorrect = 1;
                         }
 
-//                        writer.println(String.format("%d\t%s\t%s\t%d",
-//                                tripleId,
-//                                tripleDetailMap.get("property"),
-//                                maxProperty,
-//                                isCorrect));
+                        writer.println(String.format("%d\t%s\t%s\t%d\t%f",
+                                tripleId,
+                                tripleDetailMap.get("property"),
+                                maxProperty,
+                                isCorrect,
+                                confidence));
 
                         tripleIdentifiedPropertyMap.put(tripleId, maxProperty);
                     }
 
-//                    writer.println();
-//                    writer.println(triplesEvaluated + "\t" + correctlyIdentified);
-//                    writer.close();
+                    writer.println();
+                    writer.println(triplesEvaluated + "\t" + correctlyIdentified);
+                    writer.close();
 
                     if (correctlyIdentified > maxCorrect) {
                         maxCorrect = correctlyIdentified;
                         bestAlpha = alpha;
                         bestBeta = beta;
                     }
-                } catch (NullPointerException /*FileNotFoundException | UnsupportedEncodingException*/ e) {
+                } catch (FileNotFoundException | UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
                 beta = beta + 0.1;

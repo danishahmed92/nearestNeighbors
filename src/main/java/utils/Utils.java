@@ -82,4 +82,38 @@ public class Utils {
         }
         return strWithoutStopWords;
     }
+	
+	/**
+     *
+     * @param arr elements
+     * @return mean amongst array elements
+     */
+    public static double mean(Object[] arr) {
+        double sum = 0.0;
+        for(Object i : arr)
+            sum += Double.parseDouble(i.toString());
+        return sum / arr.length;
+    }
+
+    /**
+     *
+     * @param arr elements
+     * @return variance amongst array elements
+     */
+    public static double variance(Object[] arr) {
+        double mean = mean(arr);
+        double temp = 0;
+        for(Object i :arr)
+            temp += (Double.parseDouble(i.toString()) - mean) * (Double.parseDouble(i.toString()) - mean);
+        return temp / (arr.length - 1);
+    }
+
+    /**
+     *
+     * @param arr elements
+     * @return standard deviation amongst array elements
+     */
+    public static double standardDeviation(Object[] arr) {
+        return Math.sqrt(variance(arr));
+    }
 }
